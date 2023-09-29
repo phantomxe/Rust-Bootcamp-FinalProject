@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use crate::inventory::Inventory;
 
 
@@ -24,7 +26,7 @@ impl TableGenerator for Inventory {
         let max_name_len = self.items.iter().fold(name.len(), |acc, item| { if item.name.len() > acc { item.name.len() } else { acc } });
         let max_desc_len = self.items.iter().fold(desc.len(), |acc, item| { if item.description.len() > acc { item.description.len() } else { acc } });
         let max_quantity_len = self.items.iter().fold(quantity.len(), |acc, item| { if (item.quantity.to_string()).len() > acc { (item.quantity.to_string()).len() } else { acc } });
-        let max_price_len = self.items.iter().fold(price.len(), |acc, item| { if (item.price.to_string()).len() > acc { (item.price.to_string()).len() } else { acc } });
+        let max_price_len = self.items.iter().fold(price.len(), |acc, item| { if (item.price.to_string()).len() > acc { format!("{:.2}", item.price).len() } else { acc } });
         
         let total_len = (4 * 3) + max_name_len + max_desc_len + max_quantity_len + max_price_len + max_index_len;
  
@@ -93,8 +95,9 @@ impl TableGenerator for Inventory {
             print!("{} ", " ".repeat(max_desc_len - item.description.len()));
             print!("| {}", item.quantity);
             print!("{} ", " ".repeat(max_quantity_len - (item.quantity.to_string()).len()));
-            print!("| {}", item.price);
-            println!("{} |", " ".repeat(max_price_len - (item.price.to_string()).len()));
+            let price = format!("{:.2}", item.price);
+            print!("| {}", price);
+            println!("{} |", " ".repeat(max_price_len - price.len()));
         } 
 
         if self.items.len() == 0 {

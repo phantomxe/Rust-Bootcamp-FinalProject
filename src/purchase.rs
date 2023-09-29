@@ -4,8 +4,14 @@ use crate::{sales::SalesManager, inventory::{self, Inventory}};
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FirmManager {
+    pub name: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Purchase {
     pub manager: SalesManager,
+    pub firm: FirmManager,
     pub product_name: String,
     pub purchase_quantity: u32,
     pub purchase_price: f64,

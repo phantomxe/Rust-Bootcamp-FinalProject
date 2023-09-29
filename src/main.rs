@@ -6,7 +6,7 @@ mod purchase;
 use std::io; 
 use views::TableGenerator;
 
-use crate::{inventory::Product, sales::{SalesManager, Transaction, Customer}};
+use crate::{inventory::Product, sales::{SalesManager, Transaction, Customer}, purchase::{Purchase, FirmManager}};
 
 fn get_number(mut buffer: &mut String) -> i32 {
     io::stdin().read_line(&mut buffer).expect("Failed to read line");  
@@ -164,7 +164,56 @@ r#"Select a mode for operation;
                 } else {
                     println!("Item not found!");
                 } 
-            }
+            },
+            6 => {
+                println!("Ready to purchase a product!, Select a product with index from table ->");
+                inv.view();
+                let index = get_number(&mut buffer);
+                if index >= 0 && inv.items.len() > 0 && index < inv.items.len() as i32 {
+                    if let Some(mut item) = inv.items.get_mut(index as usize) {
+                        println!("You selected: {} ", item.name);
+                        
+                        println!("Enter firm name: ");
+                        let firm_name = get_text(&mut buffer);
+
+                        println!("Enter quantity: ");
+                        let quantity = get_number(&mut buffer);
+                        if quantity > 0 {
+                            if item.quantity >= quantity as u32 {
+                                println!("Enter price: ");
+                                let purchase_price = get_number_f64(&mut buffer);
+ 
+                                if purchase_price > 0.0 {
+                                    let purchase = Purchase {
+                                        firm: FirmManager {
+                                            name: firm_name
+                                        },
+                                        manager: default_manager.to_owned(),
+                                        product_name: item.name.to_owned(),
+                                        purchase_quantity: quantity as u32,
+                                        purchase_price,  
+                                    };
+
+                                    match purchase.make_purchase(&mut inv) {
+                                        Ok(comp_tr) => {
+                                            println!("Done! Here is reciepe: {:?}", comp_tr); 
+                                        }, 
+                                        Err(e) => {
+                                            println!("Purchase aborted: {}", e);
+                                        }
+                                    }
+                                } else {
+                                    println!("Price must be higher than zero!");
+                                }       
+                            } 
+                        } else {
+                            println!("Purchase quantity must be higher than zero!");
+                        }
+                    } 
+                } else {
+                    println!("Item not found!");
+                } 
+            },
             _ => { break; }
         }
     }
