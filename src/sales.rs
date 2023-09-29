@@ -25,35 +25,8 @@ pub struct Transaction {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CompleteTransaction {
     pub manager: SalesManager,
+    pub total_sale: f64,
     pub total_profit: f64
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Sales {
-    pub items: Vec<CompleteTransaction>,
-}
-
-impl Sales {
-    const FILENAME: &'static str = "sales.json";
-
-    pub fn get_from_drive() -> Result<Self, String> {  
-        if let Ok(file) = File::open(Self::FILENAME) {
-            let rdr = BufReader::new(file);
-            let inventory = serde_json::from_reader(rdr).map_err(|x| format!("Sales file corruption error: {:?}", x))?;
-            Ok(inventory)
-        } else {
-            let empty_sales = Sales { items: vec![] };
-            let output = serde_json::to_string(&empty_sales).map_err(|x| format!("Sales conversion error: {:?}", x))?; 
-            std::fs::write(Self::FILENAME, output).map_err(|x| format!("Sales write error: {:?}", x))?; 
-            Ok(empty_sales)
-        }
-    }
-
-    pub fn save_to_disk(&self) -> Result<(), String> {
-        let output = serde_json::to_string(self).map_err(|x| format!("Sales conversion error: {:?}", x))?; 
-        std::fs::write(Self::FILENAME, output).map_err(|x| format!("Sales write error: {:?}", x))?; 
-        Ok(())
-    }
 }
 
 impl Transaction {
@@ -72,15 +45,19 @@ impl Transaction {
             if item.quantity >= self.sale_quantity {
                 item.quantity -= self.sale_quantity;
 
-                let profit = self.sale_price - item.price;
+                let profit = (self.sale_price - item.price) * self.sale_quantity as f64;
 
                 if profit > 0.0 {
                     self.append_to_disk()?;
-                    
-                    Ok(CompleteTransaction {
+
+                    let comp_tr = CompleteTransaction {
                         manager: self.manager.to_owned(),
                         total_profit: profit,
-                    })
+                        total_sale: self.sale_price * self.sale_quantity as f64,
+                    };
+
+                    comp_tr.append_to_disk()?;
+                    Ok(comp_tr)
                 } else {
                     Err("There is loss/no profit in transaction!".to_string())
                 } 
@@ -90,5 +67,17 @@ impl Transaction {
         } else {
             Err("Product not found!".to_string())
         }
+    }
+}
+
+impl CompleteTransaction {
+    const FILENAME: &'static str = "sales.jsonl";
+
+    fn append_to_disk(&self) -> Result<(), String> {
+        let file = OpenOptions::new().create(true).append(true).open(Self::FILENAME).map_err(|x| format!("Sales log error: {:?}", x))?;
+        let output = serde_json::to_string(self).map_err(|x| format!("Transaction conversion error: {:?}", x))? + "\n";
+        let mut writer = BufWriter::new(file); 
+        writer.write_all(output.as_bytes()).map_err(|x| format!("Transaction write error: {:?}", x))?;
+        Ok(()) 
     }
 }

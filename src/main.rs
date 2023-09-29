@@ -1,11 +1,12 @@
 mod inventory;
 mod sales;
 mod views;
+mod purchase;
 
 use std::io; 
 use views::TableGenerator;
 
-use crate::{inventory::Product, sales::{SalesManager, Transaction, Customer, Sales}};
+use crate::{inventory::Product, sales::{SalesManager, Transaction, Customer}};
 
 fn get_number(mut buffer: &mut String) -> i32 {
     io::stdin().read_line(&mut buffer).expect("Failed to read line");  
@@ -34,7 +35,6 @@ fn main() -> Result<(), String> {
     println!("Shop Management System is starting.."); 
 
     let mut inv = inventory::Inventory::get_from_drive()?;
-    let mut sales = sales::Sales::get_from_drive()?;
 
     loop {
         //TODO Add security for managers
@@ -46,7 +46,8 @@ r#"Select a mode for operation;
 2: See current inventory,
 3: Delete a product, 
 4: Edit a product, 
-5: Make a sale) 
+5: Make a sale,
+6: Make a purchase,
 0: Exit"#);
         let operation = get_number(&mut buffer);
 
@@ -146,8 +147,7 @@ r#"Select a mode for operation;
 
                                     match transaction.make_transaction(&mut inv) {
                                         Ok(comp_tr) => {
-                                            println!("Done! Here is reciepe: {:?}", comp_tr);
-                                            sales.items.push(comp_tr);
+                                            println!("Done! Here is reciepe: {:?}", comp_tr); 
                                         }, 
                                         Err(e) => {
                                             println!("Transaction aborted: {}", e);
@@ -169,8 +169,7 @@ r#"Select a mode for operation;
         }
     }
 
-    inv.save_to_disk()?;
-    sales.save_to_disk()?;
+    inv.save_to_disk()?; 
 
     println!("Exiting.."); 
     Ok(())
