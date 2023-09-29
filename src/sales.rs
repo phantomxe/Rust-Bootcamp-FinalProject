@@ -1,4 +1,4 @@
-use std::{io::{BufReader, Write, Read, BufWriter}, fs::{File, OpenOptions}, sync::Arc};
+use std::{io::{BufReader, Write, Read, BufWriter, BufRead}, fs::{File, OpenOptions}, sync::Arc};
 
 use crate::inventory::Inventory;
 use serde::{Serialize, Deserialize};
@@ -27,6 +27,14 @@ pub struct CompleteTransaction {
     pub manager: SalesManager,
     pub total_sale: f64,
     pub total_profit: f64
+}
+
+pub struct Sales {
+    pub items: Vec<CompleteTransaction>,
+}
+
+pub struct DetailedSales {
+    pub items: Vec<Transaction>,
 }
 
 impl Transaction {
@@ -79,5 +87,26 @@ impl CompleteTransaction {
         let mut writer = BufWriter::new(file); 
         writer.write_all(output.as_bytes()).map_err(|x| format!("Transaction write error: {:?}", x))?;
         Ok(()) 
+    }
+}
+
+impl Sales {
+    pub fn get_from_drive() -> Result<Self, String> {
+        let file = File::open(CompleteTransaction::FILENAME).map_err(|x| format!("Sales file error: {}", x))?;
+        let mut reader = BufReader::new(file);
+        let mut buffer = String::new(); 
+        let mut items = Vec::new();
+
+        reader.read_to_string(&mut buffer).map_err(|x| format!("Sales file read error: {}", x))?;
+
+        for line in buffer.lines() {  
+            if line.len() > 0 {
+                let item: CompleteTransaction = serde_json::from_str(&line).map_err(|x| format!("Sales file error: {}", x))?;
+                items.push(item); 
+            }
+        }
+        Ok(Self {
+            items
+        })
     }
 }

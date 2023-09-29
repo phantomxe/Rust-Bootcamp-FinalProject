@@ -48,6 +48,7 @@ r#"Select a mode for operation;
 4: Edit a product, 
 5: Make a sale,
 6: Make a purchase,
+7: See current sales,
 0: Exit"#);
         let operation = get_number(&mut buffer);
 
@@ -214,6 +215,17 @@ r#"Select a mode for operation;
                     println!("Item not found!");
                 } 
             },
+            7 => { 
+                match sales::Sales::get_from_drive() {
+                    Ok(current_sales) => {
+                        println!("Current sales: ");
+                        current_sales.view(); 
+                    },
+                    Err(e) => {
+                        println!("I got an error on sales view: {}", e);
+                    }
+                } 
+            }, 
             _ => { break; }
         }
     }
