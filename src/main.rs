@@ -40,23 +40,78 @@ fn main() -> Result<(), String> {
         //TODO Add security for managers
         let default_manager = SalesManager { name: "Hakan".to_string() };
 
-        println!(r#"Select a mode for operation (1: Add a product to inventory, 
-                                                 2: See current inventory,
-                                                 3: Delete a product, 
-                                                 4: Edit a product, 
-                                                 5: Make a sale) -> 
-                                                 0: Exit
-        "#);
+        println!(
+r#"Select a mode for operation;
+1: Add a product to inventory, 
+2: See current inventory,
+3: Delete a product, 
+4: Edit a product, 
+5: Make a sale) 
+0: Exit"#);
         let operation = get_number(&mut buffer);
 
         match operation {
             1 => {
-                inv.items.push(Product::new("Asus Sabertooth X79", "Motherboard", 1, 999.91));
-                println!("Added new item!");
+                println!("Enter Product Name: ");
+                let name = get_text(&mut buffer);
+
+                println!("Enter Product Description: ");
+                let description = get_text(&mut buffer);
+  
+                let product = Product {
+                    name,
+                    description,
+                    quantity: 0,
+                    price: 0.0
+                };
+                println!("Done! New product: {:?}", product);
+                inv.items.push(product);
             },
             2 => {
                 println!("Current inventory: ");
                 inv.view();
+            },
+            3 => {
+                println!("Ready to delete a product!, Select a product with index from table ->");
+                inv.view();
+                let index = get_number(&mut buffer);
+
+                if index >= 0 && inv.items.len() > 0 && index < inv.items.len() as i32 {
+                    if let Some(item) = inv.items.get(index as usize) {
+                        println!("This product: {} will be deleted! Type DELETE to confirm.", item.name);
+
+                        let confirm = get_text(&mut buffer);
+                        if confirm == "DELETE" {
+                            inv.items.remove(index as usize);
+                            println!("Deleted!");
+                        } else {
+                            println!("Aborted!");
+                        }                        
+                    }
+                }
+            },
+            4 => {
+                println!("Ready to edit a product!, Select a product with index from table ->");
+                inv.view();
+                let index = get_number(&mut buffer);
+
+                if index >= 0 && inv.items.len() > 0 && index < inv.items.len() as i32 {
+                    if let Some(mut item) = inv.items.get_mut(index as usize) {
+                        println!("Enter Product Name (Current: {}, Press Enter to skip)", item.name);
+                        let name = get_text(&mut buffer);
+                        if name.len() > 0 {
+                            item.name = name;
+                        }
+
+                        println!("Enter Product Description (Current: {}, Press Enter to skip)", item.description);
+                        let description = get_text(&mut buffer);     
+                        if description.len() > 0 {
+                            item.description = description;
+                        } 
+
+                        println!("Success!, Result: {:?}", item);
+                    }
+                }
             },
             5 => {
                 println!("Ready to sale product!, Select a product with index from table ->");
