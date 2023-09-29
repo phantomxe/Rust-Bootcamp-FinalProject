@@ -40,7 +40,13 @@ fn main() -> Result<(), String> {
         //TODO Add security for managers
         let default_manager = SalesManager { name: "Hakan".to_string() };
 
-        println!("Select a mode for operation (1: Add a product to inventory, 2: See current inventory, 3: Delete a product, 4: Edit a product, 5: Make a sale) -> ");
+        println!(r#"Select a mode for operation (1: Add a product to inventory, 
+                                                 2: See current inventory,
+                                                 3: Delete a product, 
+                                                 4: Edit a product, 
+                                                 5: Make a sale) -> 
+                                                 0: Exit
+        "#);
         let operation = get_number(&mut buffer);
 
         match operation {

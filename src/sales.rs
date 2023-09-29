@@ -1,4 +1,4 @@
-use std::{io::BufReader, fs::File};
+use std::{io::{BufReader, Write, Read, BufWriter}, fs::{File, OpenOptions}, sync::Arc};
 
 use crate::inventory::Inventory;
 use serde::{Serialize, Deserialize};
@@ -57,6 +57,16 @@ impl Sales {
 }
 
 impl Transaction {
+    const FILENAME: &'static str = "transactions.jsonl"; 
+
+    fn append_to_disk(&self) -> Result<(), String> {
+        let file = OpenOptions::new().create(true).append(true).open(Self::FILENAME).map_err(|x| format!("Transaction log error: {:?}", x))?;
+        let output = serde_json::to_string(self).map_err(|x| format!("Transaction conversion error: {:?}", x))? + "\n";
+        let mut writer = BufWriter::new(file); 
+        writer.write_all(output.as_bytes()).map_err(|x| format!("Transaction write error: {:?}", x))?;
+        Ok(()) 
+    }
+
     pub fn make_transaction(&self, inventory: &mut Inventory) -> Result<CompleteTransaction, String> {
         if let Some(mut item) = inventory.items.iter_mut().find(|item| item.name == self.product_name) {
             if item.quantity >= self.sale_quantity {
@@ -65,6 +75,8 @@ impl Transaction {
                 let profit = self.sale_price - item.price;
 
                 if profit > 0.0 {
+                    self.append_to_disk()?;
+                    
                     Ok(CompleteTransaction {
                         manager: self.manager.to_owned(),
                         total_profit: profit,
