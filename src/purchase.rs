@@ -1,4 +1,4 @@
-use std::{fs::OpenOptions, io::{BufWriter, Write}};
+use std::{fs::{OpenOptions, File}, io::{BufWriter, Write, BufReader, Read}};
 
 use crate::{sales::SalesManager, inventory::{self, Inventory}};
 use serde::{Serialize, Deserialize};
@@ -15,6 +15,10 @@ pub struct Purchase {
     pub product_name: String,
     pub purchase_quantity: u32,
     pub purchase_price: f64,
+}
+
+pub struct Purchases {
+    pub items: Vec<Purchase>,
 }
 
 impl Purchase {
@@ -35,5 +39,27 @@ impl Purchase {
         inventory.save_to_disk()?;
         self.append_to_disk()?;
         Ok(())
+    }
+}
+
+
+impl Purchases {
+    pub fn get_from_drive() -> Result<Self, String> {
+        let file = File::open(Purchase::FILENAME).map_err(|x| format!("Purchase file error: {}", x))?;
+        let mut reader = BufReader::new(file);
+        let mut buffer = String::new(); 
+        let mut items = Vec::new();
+
+        reader.read_to_string(&mut buffer).map_err(|x| format!("Purchase file read error: {}", x))?;
+
+        for line in buffer.lines() {  
+            if line.len() > 0 {
+                let item: Purchase = serde_json::from_str(&line).map_err(|x| format!("Sales file error: {}", x))?;
+                items.push(item); 
+            }
+        }
+        Ok(Self {
+            items
+        })
     }
 }

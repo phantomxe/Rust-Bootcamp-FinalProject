@@ -49,6 +49,7 @@ r#"Select a mode for operation;
 5: Make a sale,
 6: Make a purchase,
 7: See current sales,
+8: See current purchases,
 0: Exit"#);
         let operation = get_number(&mut buffer);
 
@@ -226,6 +227,17 @@ r#"Select a mode for operation;
                     }
                 } 
             }, 
+            8 => {
+                match purchase::Purchases::get_from_drive() {
+                    Ok(current_purchases) => {
+                        println!("Current purchases: ");
+                        current_purchases.view(); 
+                    },
+                    Err(e) => {
+                        println!("I got an error on purchases view: {}", e);
+                    }
+                }
+            },
             _ => { break; }
         }
     }
