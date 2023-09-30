@@ -5,7 +5,7 @@ use crate::sales::SalesManager;
 pub const USERS: Lazy<Vec<AuthUser>> =  Lazy::new(|| 
 vec![
     AuthUser {
-        username: "Hakan".to_string(),
+        username: "demo".to_string(),
         password: "demo".to_string(),
     }
 ]);
